@@ -44,3 +44,16 @@ emailWorker.on('failed', (job, error) => {
 emailWorker.on('error', (error) => {
     console.error('Email Worker error:', error);
 });
+
+async function shutdown() {
+    console.log('Shutting down Email Worker...');
+
+    await emailWorker.close();
+    await connection.quit();
+
+    console.log('Email Worker closed successfully');
+    process.exit(0);
+}
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
