@@ -81,25 +81,25 @@ the required background tasks.
 ## Getting Started
 
 ### 1. Install dependencies
-
+```text
 npm install
-
+```
 ### 2. Configure environment variables
-
+```text
 Copy .env.example to .env and update the values.
-
+```
 ### 3. Start Redis
-
+```text
 Run a local Redis instance.
-
+```
 ### 4. Start the API
-
+```text
 npm start
-
+```
 ### 5. Start the Worker
-
+```text
 npm run worker
-
+```
 ## Future Improvements
 
 - Delayed jobs

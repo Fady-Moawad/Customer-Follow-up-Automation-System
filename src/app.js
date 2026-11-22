@@ -1,8 +1,8 @@
 require('dotenv').config();
 const express = require('express');
-const { callQueue } = require('./queue');
 const app = express();
-
+const emailQueue = require('../src/queues/email.queue.js');
+const aiQueue = require('../src/queues/ai.queue.js');
 app.use(express.json());
 
 // Add a new Job
@@ -17,12 +17,13 @@ app.post('/customers/process', async (req, res) => {
         }
 
 
-        const job = callQueue.add('send-email', {
+        const job =await emailQueue.add('send-email', {
             customerName,
             email,
             message
         },{
             attempts:3,
+          delay:10*1000,
             backoff:{
                 type:'exponential',
                 delay:2000
@@ -33,15 +34,54 @@ app.post('/customers/process', async (req, res) => {
         
     )
 
+    console.log(job.id);
+    
         return res.status(202).json({
             message: 'Email job has been queued',
             jobId: job.id,
+            // delay:'10 second',
         });
 
     } catch (error) {
         console.error(error);
         return res.status(500).json({
             message: 'Failed to add job',
+        });
+    }
+});
+
+app.post('/ai/analyze', async (req, res) => {
+    try {
+        const { message } = req.body;
+
+        if (!message) {
+            return res.status(400).json({
+                message: 'Message is required',
+            });
+        }
+
+        const job = await aiQueue.add(
+            'analyze-message',
+            { message },
+            {
+                attempts: 3,
+                backoff: {
+                    type: 'exponential',
+                    delay: 2000,
+                },
+                removeOnComplete: 100,
+                removeOnFail: 500,
+            }
+        );
+
+        return res.status(202).json({
+            message: 'AI analysis job has been queued',
+            jobId: job.id,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message: 'Failed to queue AI job',
         });
     }
 });
